@@ -2,32 +2,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-  <meta name="robots" content="noindex, nofollow">
-  <meta name="googlebot" content="noindex, nofollow">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="googlebot" content="noindex, nofollow">
+  <!--
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+  initial-scale=1.0, maximum-scale=1.0, , user-scalable=0
+  -->
+    <meta name="viewport" content="width=device-width, target-densitydpi=medium-dpi" />
 <!--
   <script type="text/javascript" src="//code.jquery.com/jquery-1.9.1.js"></script>
 -->
-<script src="https://code.jquery.com/jquery-3.0.0.js"></script>
+    <script src="https://code.jquery.com/jquery-3.0.0.js"></script> 
+    <script src="https://code.jquery.com/jquery-migrate-3.0.0.js"></script>
 
-<script src="https://code.jquery.com/jquery-migrate-3.0.0.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.15.1/jquery.validate.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.15.1/additional-methods.js"></script>
 
 <!--
   <script type="text/javascript" src="http://code.jquery.com/mobile/1.3.0-beta.1/jquery.mobile-1.3.0-beta.1.js"></script>
 -->
-   <script type="text/javascript" src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.js"></script>
 <!--
   <link rel="stylesheet" type="text/css" href="http://code.jquery.com/mobile/1.3.0-beta.1/jquery.mobile-1.3.0-beta.1.css">
 -->
 
-  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
 
-  <style type="text/css">
+    <style type="text/css">
     .ui-bar {
     padding :5px 0px 5px 0px !important;
     margin :5px 0px 5px 0px !important;
-}
-  </style>
+    }
+
+    .error {
+    color:red;
+    }
+    </style>
 
   <title>CS496 by Dennis Tat</title>
 <div>
@@ -54,8 +65,14 @@ $(document).on("pageinit", "#testpage", function(){
         });
     });
 */
-$(document).on("pageinit", "#loclist-page", function () {
-    $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/locations", function(data){
+$(document).on("pageshow", "#loclist-page", function(){
+    $("#loc-list").listview("refresh");
+});
+
+
+$(document).on("pagebeforeshow", "#loclist-page", function getLocations() {
+    $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/locations?limit=100", function(data){
+
             locdata = data.items;
             //console.log(locdata[0].name);
 
@@ -72,11 +89,13 @@ $(document).on("pageinit", "#loclist-page", function () {
         //store index value in array as id of the <a> tag
         li += '<li><a href="#" id="' + i + '" class="info-go">' + location.name + '</a></li>';
     });
+    $("#loc-list").empty();
     //append list to ul
     $("#loc-list").append(li).promise().done(function () {
         //wait for append to finish - thats why you use a promise()
         //done() will run after append is done
         //add the click event for the redirection to happen to #details-page
+        $(this).off();
         $(this).on("click", ".info-go", function (e) {
             e.preventDefault();
             //store the information in the next page's data
@@ -85,7 +104,9 @@ $(document).on("pageinit", "#loclist-page", function () {
             //Now the URL in the address bar will read index.html#details-page
             //where #details-page is the "id" of the second page
             //we're gonna redirect to that now using changePage() method
+            console.log("changing pages");
             $.mobile.changePage("#locdetails-page");
+            return false;
         });
 
         //refresh list to enhance its styling.
@@ -123,7 +144,124 @@ $(document).on("pagebeforeshow", "#locdetails-page", function () {
     //add this to html
     $(this).find("[data-role=content]").html(infoview);
 });
-//]]> 
+
+$(window).load(function(){
+$('#locForm').validate({
+    rules: {
+        locNameInput: {
+            required: true
+        },
+        locPhoneInput: {
+            required: true
+        }/*,
+        email: {
+            required: true
+        }*/
+    },
+    messages: {
+        locNameInput: {
+            required: "Please enter a name."
+        },
+        locPhoneInput: {
+            required: "Please enter a phone number."
+        }/*,
+        lname: {
+            required: "Please enter your email."
+        }*/
+    },
+    errorPlacement: function (error, element) {
+        error.appendTo(element.parent().prev());
+    },
+    submitHandler: function (locForm) {
+        console.log($('[name=locNameInput]').val());
+        console.log($('[name=locPhoneInput]').val());
+
+        $.ajax({
+            type: 'POST',
+            url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/newlocation',
+            data: JSON.stringify({
+                name: $('[name=locNameInput]').val(), 
+                phone_number: $('[name=locPhoneInput]').val()
+            }),
+            function(data) {
+                console.log(data);
+                if(data != "") {
+                    console.log("success");
+                    // do something
+                } else {
+                    console.log("Couldn't connect");
+                    // couldn't connect
+                }
+            },
+            dataType: "json",
+            contentType: "application/json"
+        });
+/*
+        var postTo = 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/newlocation';
+        var insertResponse = $.post(postTo,({name: $('[name=locNameInput]').val(), phone_number: $('[name=locPhoneInput]').val()}),
+
+        function(data) {
+        console.log(insertResponse);
+        alert(data);
+        console.log(data);
+        if(data != "") {
+            console.log("success");
+            // do something
+        } else {
+            console.log("Couldn't connect");
+            // couldn't connect
+        }
+        }, "application/json");
+*/
+        //$("#loc-list").listview("refresh");
+        //$('#locForm')[0].reset();
+        resetForm();
+        
+        $(':mobile-pagecontainer').pagecontainer('change', '#loclist-page', {
+            reload: false
+        });
+        
+        toast("Location added");
+        return false;
+        
+
+    }
+});
+});
+
+function resetForm() {
+    $('#locForm')[0].reset();
+    //$('#locform').validate().resetForm();
+    $("label.error").hide();
+  $(".error").removeClass("error");
+}
+
+// toast-like notification
+// https://gist.github.com/kamranzafar/3136584
+function toast(message) {
+    var $toast = $('<div class="ui-loader ui-overlay-shadow ui-body-e ui-corner-all"><h3>' + message + '</h3></div>');
+
+    $toast.css({
+        display: 'block', 
+        background: '#fff',
+        opacity: 0.90, 
+        position: 'fixed',
+        padding: '7px',
+        'text-align': 'center',
+        width: '270px',
+        left: ($(window).width() - 284) / 2,
+        top: $(window).height() / 2 - 20
+    });
+
+    var removeToast = function(){
+        $(this).remove();
+    };
+
+    $toast.click(removeToast);
+
+    $toast.appendTo($.mobile.pageContainer).delay(2000);
+    $toast.fadeOut(400, removeToast);
+}
 
 </script>
 
@@ -139,10 +277,28 @@ $(document).on("pagebeforeshow", "#locdetails-page", function () {
         </div>
     </div>
 -->
+
+  <!--index page -->
+  
+<div data-role="page" id="index">
+    <div data-role="header" data-theme="b">
+         <h1> Media Library</h1>
+
+    </div>
+    
+    <div data-role="content">
+    <div>
+        <a href="#loclist-page" class="ui-btn">View Locations</a>
+    </div>
+    </div>
+</div>
+
+
   <!--Location list page -->
   
 <div data-role="page" id="loclist-page">
     <div data-role="header" data-theme="b">
+    <a href="#index" data-rel="back" data-role="button">Home</a>
          <h1> Locations</h1>
 
     </div>
@@ -159,7 +315,7 @@ $(document).on("pagebeforeshow", "#locdetails-page", function () {
 
 <!--location detail page -->
 <div data-role="page" id="locdetails-page">
-    <div data-role="header" data-theme="b"><a href="#" data-rel="back" data-role="button">Go back</a>
+    <div data-role="header" data-theme="b"><a href="#loclist-page" data-rel="back" data-role="button">Go back</a>
 
          <h1>Location Details</h1>
 
@@ -169,20 +325,20 @@ $(document).on("pagebeforeshow", "#locdetails-page", function () {
   
 <!-- add location page -->
 <div data-role="page" id="addloc-page">
-    <div data-role="header" data-theme="b"><a href="#" data-rel="back" data-role="button">Go back</a>
+    <div data-role="header" data-theme="b"><a href="#loclist-page" data-rel="back" data-role="button" onclick="resetForm();">Go back</a>
          <h1>Add Location</h1>
     </div>
     <div data-role="main" class="ui-content">
-    <form action="#info-page" method="post">
+    <form id="locForm" action="#loclist-page" method="post">
 
         <div>
         <label for="locNameInput">Name:</label>
-        <input type="text" name="text" id="locNameInput" placeholder="Name">
+        <input type="text" name="locNameInput" id="locNameInput" placeholder="Name" value="" required pattern=".*\S+.*">
         </div>
         <br>
         <div>
-        <label for="locPhoneInput">Phone Number:</label>
-        <input type="text" name="text" id="locPhoneInput" placeholder="xxx-xxx-xxxx">
+        <label for="locPhoneInput">Phone Number (format: xxx-xxx-xxxx):</label>
+        <input type="text" name="locPhoneInput" id="locPhoneInput" placeholder="xxx-xxx-xxxx" pattern="^\d{3}-\d{3}-\d{4}$" required>
         </div>
         <br>
         <div>
