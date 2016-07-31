@@ -225,6 +225,66 @@ function toast(message) {
     </script>
 
 
+ <script type="text/javascript">
+     function getCurrentLocationGPS() {
+
+    navigator.geolocation.getCurrentPosition
+    (onLocationSuccess, onLocationError, { enableHighAccuracy: true });
+}
+
+// Success callback for get geo coordinates
+
+var onLocationSuccess = function (position) {
+
+    Latitude = position.coords.latitude;
+    Longitude = position.coords.longitude;
+
+    getLocation(Latitude, Longitude);
+}
+
+var OpenWeatherAppKey = "065f5b04418b58287985a5ade2dff70d";
+
+function getLocation(latitude, longitude) {
+
+    var queryString =
+      'http://api.openweathermap.org/data/2.5/weather?lat='
+      + latitude + '&lon=' + longitude + '&appid=' + OpenWeatherAppKey + '&units=imperial';
+
+    $.getJSON(queryString, function (results) {
+
+        if (results.weather.length) {
+
+            $.getJSON(queryString, function (results) {
+
+                if (results.weather.length) {
+
+                    $('#description').text(results.name);
+
+                    //console.log(results.name);
+
+                    document.getElementById("locNameInput").value = results.name;
+                    
+                }
+
+            });
+        }
+    }).fail(function () {
+        console.log("error getting location");
+    });
+}
+
+
+// Error callback
+
+function onLocationError(error) {
+    console.log('code: ' + error.code + '\n' +
+        'message: ' + error.message + '\n');
+}
+
+
+
+ </script>
+
 
     <title>CS496 by Dennis Tat</title>
 </head>
@@ -286,7 +346,9 @@ function toast(message) {
 
         <div>
         <label for="locNameInput">Name:</label>
-        <input type="text" name="locNameInput" id="locNameInput" placeholder="Name" value="" required pattern=".*\S+.*">
+            <input type="text" name="locNameInput" id="locNameInput" placeholder="Name" value="" required pattern=".*\S+.*">
+            <button type="button" class="ui-btn ui-icon-location ui-btn-icon-left" onclick="getCurrentLocationGPS();">Use Current Location</button>
+
         </div>
         <br>
         <div>
@@ -315,62 +377,7 @@ function toast(message) {
 
  </script>
 
- <script type="text/javascript">
-     function getWeatherLocation() {
 
-    navigator.geolocation.getCurrentPosition
-    (onWeatherSuccess, onWeatherError, { enableHighAccuracy: true });
-}
-
-// Success callback for get geo coordinates
-
-var onWeatherSuccess = function (position) {
-
-    Latitude = position.coords.latitude;
-    Longitude = position.coords.longitude;
-
-    getWeather(Latitude, Longitude);
-}
-
-var OpenWeatherAppKey = "065f5b04418b58287985a5ade2dff70d";
-
-function getWeather(latitude, longitude) {
-
-    var queryString =
-      'http://api.openweathermap.org/data/2.5/weather?lat='
-      + latitude + '&lon=' + longitude + '&appid=' + OpenWeatherAppKey + '&units=imperial';
-
-    $.getJSON(queryString, function (results) {
-
-        if (results.weather.length) {
-
-            $.getJSON(queryString, function (results) {
-
-                if (results.weather.length) {
-
-                    $('#description').text(results.name);
-
-                    document.getElementById("locNameInput").textContent = results.name;
-                    
-                }
-
-            });
-        }
-    }).fail(function () {
-        console.log("error getting location");
-    });
-}
-
-// Error callback
-
-function onWeatherError(error) {
-    console.log('code: ' + error.code + '\n' +
-        'message: ' + error.message + '\n');
-}
-
-
-
- </script>
 
 </body>
 

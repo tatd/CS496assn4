@@ -43,6 +43,8 @@
     <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
 
     <script type='text/javascript'>
+
+//http://stackoverflow.com/questions/18051227/how-to-populate-a-jquery-mobile-listview-with-json-data
 var info =[];
 var locdata = [];
 
@@ -64,33 +66,26 @@ $(document).on("pagebeforeshow", "#loclist-page", function getLocations() {
     var li = "";
     //container for $li to be added
     $.each(info, function (i, location) {
-        //add the <li> to "li" variable
-        //note the use of += in the variable
-        //meaning I'm adding to the existing data. not replacing it.
-        //store index value in array as id of the <a> tag
+        //add to list items
         li += '<li><a href="#" id="' + i + '" class="info-go">' + location.name + '</a></li>';
     });
     $("#loc-list").empty();
     //append list to ul
     $("#loc-list").append(li).promise().done(function () {
-        //wait for append to finish - thats why you use a promise()
-        //done() will run after append is done
-        //add the click event for the redirection to happen to #details-page
+        //append list items to list
+
         $(this).off();
         $(this).on("click", ".info-go", function (e) {
             e.preventDefault();
             //store the information in the next page's data
             $("#locdetails-page").data("info", info[this.id]);
-            //change the page # to second page. 
-            //Now the URL in the address bar will read index.html#details-page
-            //where #details-page is the "id" of the second page
-            //we're gonna redirect to that now using changePage() method
+
+            //change the page # to details page when clicked 
             console.log("changing pages");
             $.mobile.changePage("#locdetails-page");
             return false;
         });
 
-        //refresh list to enhance its styling.
         $(this).listview("refresh");
     });
         });
@@ -99,7 +94,7 @@ $(document).on("pagebeforeshow", "#loclist-page", function getLocations() {
 
 
 $(document).on("pagebeforeshow", "#locdetails-page", function () {
-    //get from data - you put this here when the "a" wa clicked in the previous page
+    //get from data from location id
     var info = $(this).data("info");
     //string to put HTML in
     var info_view = "";
@@ -107,13 +102,8 @@ $(document).on("pagebeforeshow", "#locdetails-page", function () {
 
     infoview += '<div class="ui-grid-a"><div class="ui-block-a"><div class="ui-bar field" style="font-weight : bold; text-align: left;">Name: ' + '</div></div><div class="ui-block-b"><div class="ui-bar value" style="width : 75%">' + info.name + '</div></div> <div class="ui-block-a"><div class="ui-bar field" style="font-weight : bold; text-align: left;">Phone Number: ' + '</div></div><div class="ui-block-b"><div class="ui-bar value" style="width : 75%">' + info.phone_number + '</div></div> </div>';
 
-    //use for..in to iterate through object
+ 
     for (var key in info) {
-        //Im using grid layout here.
-        //use any kind of layout you want.
-        //key is the key of the property in the object 
-        //if obj = {name: 'k'}
-        //key = name, value = k
 
         info_view += '<div class="ui-grid-a"><div class="ui-block-a"><div class="ui-bar field" style="font-weight : bold; text-align: left;">' + key + '</div></div><div class="ui-block-b"><div class="ui-bar value" style="width : 75%">' + info[key] + '</div></div></div>';
     }
@@ -152,6 +142,8 @@ $('#locForm').validate({
         console.log($('[name=locNameInput]').val());
         console.log($('[name=locPhoneInput]').val());
 
+        // POST request to add new location
+        // gets user input from form
         $.ajax({
             type: 'POST',
             url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/newlocation',
@@ -163,22 +155,23 @@ $('#locForm').validate({
                 console.log(data);
                 if(data != "") {
                     console.log("success");
-                    // do something
                 } else {
                     console.log("Couldn't connect");
-                    // couldn't connect
                 }
             },
             dataType: "json",
             contentType: "application/json"
         });
 
+        // reset form after it data is sent
         resetForm();
-        
+
+        // go back to add location page
         $(':mobile-pagecontainer').pagecontainer('change', '#addloc-page', {
             reload: false
         });
         
+        // notify user that new location was added
         toast("Location added");
         return false;
         
@@ -187,6 +180,7 @@ $('#locForm').validate({
 });
 });
 
+// function to reset the input form
 function resetForm() {
     $('#locForm')[0].reset();
     //$('#locform').validate().resetForm();
@@ -221,9 +215,74 @@ function toast(message) {
     $toast.fadeOut(400, removeToast);
 }
 
-
     </script>
 
+
+ <script type="text/javascript">
+ //https://github.com/apache/cordova-plugin-geolocation
+ // function to get current GPS coordinates
+     function getCurrentLocationGPS() {
+
+    navigator.geolocation.getCurrentPosition
+    (onLocationSuccess, onLocationError, { enableHighAccuracy: true });
+}
+
+// Success callback for get geo coordinates
+
+var onLocationSuccess = function (position) {
+
+// set lat and long variables
+    Latitude = position.coords.latitude;
+    Longitude = position.coords.longitude;
+
+// pass lat and long to next function
+    getLocation(Latitude, Longitude);
+}
+
+var OpenWeatherAppKey = "065f5b04418b58287985a5ade2dff70d";
+
+// uses GPS coordinates as parameters in GET request
+// GET request returns JSON data about coordinates
+// get location name from JSON response
+// place name in form input for user
+function getLocation(latitude, longitude) {
+
+    var queryString =
+      'http://api.openweathermap.org/data/2.5/weather?lat='
+      + latitude + '&lon=' + longitude + '&appid=' + OpenWeatherAppKey + '&units=imperial';
+
+    $.getJSON(queryString, function (results) {
+
+        if (results.weather.length) {
+
+            $.getJSON(queryString, function (results) {
+
+                if (results.weather.length) {
+
+                    $('#description').text(results.name);
+
+                    //console.log(results.name);
+
+                    document.getElementById("locNameInput").value = results.name;
+                    
+                }
+
+            });
+        }
+    }).fail(function () {
+        console.log("error getting location");
+    });
+}
+
+
+// Error callback
+
+function onLocationError(error) {
+    console.log('code: ' + error.code + '\n' +
+        'message: ' + error.message + '\n');
+}
+
+ </script>
 
 
     <title>CS496 by Dennis Tat</title>
@@ -247,7 +306,7 @@ function toast(message) {
 </div>
 
 
-  <!--Location list page -->
+  <!--location list page -->
   
 <div data-role="page" id="loclist-page">
     <div data-role="header" data-theme="b">
@@ -287,7 +346,8 @@ function toast(message) {
         <div>
         <label for="locNameInput">Name:</label>
             <input type="text" name="locNameInput" id="locNameInput" placeholder="Name" value="" required pattern=".*\S+.*">
-            
+            <button type="button" class="ui-btn ui-icon-location ui-btn-icon-left" onclick="getCurrentLocationGPS();">Use Current Location</button>
+
         </div>
         <br>
         <div>
@@ -316,62 +376,7 @@ function toast(message) {
 
  </script>
 
- <script type="text/javascript">
-     function getWeatherLocation() {
 
-    navigator.geolocation.getCurrentPosition
-    (onWeatherSuccess, onWeatherError, { enableHighAccuracy: true });
-}
-
-// Success callback for get geo coordinates
-
-var onWeatherSuccess = function (position) {
-
-    Latitude = position.coords.latitude;
-    Longitude = position.coords.longitude;
-
-    getWeather(Latitude, Longitude);
-}
-
-var OpenWeatherAppKey = "065f5b04418b58287985a5ade2dff70d";
-
-function getWeather(latitude, longitude) {
-
-    var queryString =
-      'http://api.openweathermap.org/data/2.5/weather?lat='
-      + latitude + '&lon=' + longitude + '&appid=' + OpenWeatherAppKey + '&units=imperial';
-
-    $.getJSON(queryString, function (results) {
-
-        if (results.weather.length) {
-
-            $.getJSON(queryString, function (results) {
-
-                if (results.weather.length) {
-
-                    $('#description').text(results.name);
-
-                    document.getElementById("locNameInput").textContent = results.name;
-                    
-                }
-
-            });
-        }
-    }).fail(function () {
-        console.log("error getting location");
-    });
-}
-
-// Error callback
-
-function onWeatherError(error) {
-    console.log('code: ' + error.code + '\n' +
-        'message: ' + error.message + '\n');
-}
-
-
-
- </script>
 
 </body>
 
