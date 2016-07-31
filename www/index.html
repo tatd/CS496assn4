@@ -207,6 +207,48 @@ function toast(message) {
 }
     </script>
 
+
+    <script type="text/javascript">
+var OpenWeatherAppKey = "065f5b04418b58287985a5ade2dff70d";
+var lat = 47.61;
+var long = -122.33;
+
+function getWeather(latitude, longitude) {
+
+    var queryString =
+      'http://api.openweathermap.org/data/2.5/weather?lat='
+      + latitude + '&lon=' + longitude + '&appid=' + OpenWeatherAppKey + '&units=imperial';
+
+    $.getJSON(queryString, function (results) {
+
+        if (results.weather.length) {
+
+            $.getJSON(queryString, function (results) {
+
+                if (results.weather.length) {
+
+                    $('#description').text(results.name);
+                    //console.log(results.name);
+
+                    document.getElementById("locNameInput").value = results.name;
+                     //$("label.error").hide();
+  //$(".error").removeClass("error");
+                    
+                }
+
+            });
+        }
+    }).fail(function () {
+        console.log("error getting location");
+    });
+}
+
+function getCurrentLocation(){
+    getWeather(lat, long);
+}
+
+</script>
+
   <title>CS496 by Dennis Tat</title>
   
 </head>
@@ -269,6 +311,9 @@ function toast(message) {
         <div>
         <label for="locNameInput">Name:</label>
         <input type="text" name="locNameInput" id="locNameInput" placeholder="Name" value="" required pattern=".*\S+.*">
+
+        <button type="button" class="ui-btn ui-icon-location ui-btn-icon-left" onclick="getCurrentLocation();">Use Current Location</button>
+
         </div>
         <br>
         <div>
