@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+    <!-- This is a wide open CSP declaration. To lock this down for production, see below. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src *" />
+    <!-- Good default declaration:
+    * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+    * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+    * Disables use of eval() and inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+        * Enable inline JS: add 'unsafe-inline' to default-src
+        * Enable eval(): add 'unsafe-eval' to default-src
+    * Create your own at http://cspisawesome.com
+    -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: 'unsafe-inline' https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; media-src *" /> -->
+<!--
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+-->
+    <meta name="viewport" content="width=device-width, target-densitydpi=medium-dpi" />
+    <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css">
+    <style type="text/css">
+    .ui-bar {
+    padding :5px 0px 5px 0px !important;
+    margin :5px 0px 5px 0px !important;
+    }
+
+    .error {
+    color:red;
+    }
+    </style>
+
+    <script src="js/jquery-3.1.0.min.js"></script> 
+    <script src="js/jquery-migrate-3.0.0.min.js"></script>
+
+    <script src="js/jquery.validate.min.js"></script>
+    <script src="js/additional-methods.min.js"></script>
+
+    <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+
+    <script type='text/javascript'>
+var info =[];
+var locdata = [];
+
+$(document).on("pageshow", "#loclist-page", function(){
+    $("#loc-list").listview("refresh");
+});
+
+
+$(document).on("pagebeforeshow", "#loclist-page", function getLocations() {
+    $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/locations?limit=100", function(data){
+
+            locdata = data.items;
+            //console.log(locdata[0].name);
+
+            info = locdata;
+            //console.log(info);
+            //console.log(locdata);
+    //set up string for adding <li/>
+    var li = "";
+    //container for $li to be added
+    $.each(info, function (i, location) {
+        //add the <li> to "li" variable
+        //note the use of += in the variable
+        //meaning I'm adding to the existing data. not replacing it.
+        //store index value in array as id of the <a> tag
+        li += '<li><a href="#" id="' + i + '" class="info-go">' + location.name + '</a></li>';
+    });
+    $("#loc-list").empty();
+    //append list to ul
+    $("#loc-list").append(li).promise().done(function () {
+        //wait for append to finish - thats why you use a promise()
+        //done() will run after append is done
+        //add the click event for the redirection to happen to #details-page
+        $(this).off();
+        $(this).on("click", ".info-go", function (e) {
+            e.preventDefault();
+            //store the information in the next page's data
+            $("#locdetails-page").data("info", info[this.id]);
+            //change the page # to second page. 
+            //Now the URL in the address bar will read index.html#details-page
+            //where #details-page is the "id" of the second page
+            //we're gonna redirect to that now using changePage() method
+            console.log("changing pages");
+            $.mobile.changePage("#locdetails-page");
+            return false;
+        });
+
+        //refresh list to enhance its styling.
+        $(this).listview("refresh");
+    });
+        });
+    
+});
+
+
+$(document).on("pagebeforeshow", "#locdetails-page", function () {
+    //get from data - you put this here when the "a" wa clicked in the previous page
+    var info = $(this).data("info");
+    //string to put HTML in
+    var info_view = "";
+    var infoview = "";
+
+    infoview += '<div class="ui-grid-a"><div class="ui-block-a"><div class="ui-bar field" style="font-weight : bold; text-align: left;">Name: ' + '</div></div><div class="ui-block-b"><div class="ui-bar value" style="width : 75%">' + info.name + '</div></div> <div class="ui-block-a"><div class="ui-bar field" style="font-weight : bold; text-align: left;">Phone Number: ' + '</div></div><div class="ui-block-b"><div class="ui-bar value" style="width : 75%">' + info.phone_number + '</div></div> </div>';
+
+    //use for..in to iterate through object
+    for (var key in info) {
+        //Im using grid layout here.
+        //use any kind of layout you want.
+        //key is the key of the property in the object 
+        //if obj = {name: 'k'}
+        //key = name, value = k
+
+        info_view += '<div class="ui-grid-a"><div class="ui-block-a"><div class="ui-bar field" style="font-weight : bold; text-align: left;">' + key + '</div></div><div class="ui-block-b"><div class="ui-bar value" style="width : 75%">' + info[key] + '</div></div></div>';
+    }
+    //add this to html
+    $(this).find("[data-role=content]").html(infoview);
+});
+
+$(window).load(function(){
+$('#locForm').validate({
+    rules: {
+        locNameInput: {
+            required: true
+        },
+        locPhoneInput: {
+            required: true
+        }/*,
+        email: {
+            required: true
+        }*/
+    },
+    messages: {
+        locNameInput: {
+            required: "Please enter a name."
+        },
+        locPhoneInput: {
+            required: "Please enter a phone number."
+        }/*,
+        lname: {
+            required: "Please enter your email."
+        }*/
+    },
+    errorPlacement: function (error, element) {
+        error.appendTo(element.parent().prev());
+    },
+    submitHandler: function (locForm) {
+        console.log($('[name=locNameInput]').val());
+        console.log($('[name=locPhoneInput]').val());
+
+        $.ajax({
+            type: 'POST',
+            url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/newlocation',
+            data: JSON.stringify({
+                name: $('[name=locNameInput]').val(), 
+                phone_number: $('[name=locPhoneInput]').val()
+            }),
+            function(data) {
+                console.log(data);
+                if(data != "") {
+                    console.log("success");
+                    // do something
+                } else {
+                    console.log("Couldn't connect");
+                    // couldn't connect
+                }
+            },
+            dataType: "json",
+            contentType: "application/json"
+        });
+
+        resetForm();
+        
+        $(':mobile-pagecontainer').pagecontainer('change', '#addloc-page', {
+            reload: false
+        });
+        
+        toast("Location added");
+        return false;
+        
+
+    }
+});
+});
+
+function resetForm() {
+    $('#locForm')[0].reset();
+    //$('#locform').validate().resetForm();
+    $("label.error").hide();
+  $(".error").removeClass("error");
+}
+
+// toast-like notification
+// https://gist.github.com/kamranzafar/3136584
+function toast(message) {
+    var $toast = $('<div class="ui-loader ui-overlay-shadow ui-body-e ui-corner-all"><h3>' + message + '</h3></div>');
+
+    $toast.css({
+        display: 'block', 
+        background: '#fff',
+        opacity: 0.90, 
+        position: 'fixed',
+        padding: '7px',
+        'text-align': 'center',
+        width: '270px',
+        left: ($(window).width() - 284) / 2,
+        top: $(window).height() / 2 - 20
+    });
+
+    var removeToast = function(){
+        $(this).remove();
+    };
+
+    $toast.click(removeToast);
+
+    $toast.appendTo($.mobile.pageContainer).delay(2000);
+    $toast.fadeOut(400, removeToast);
+}
+
+
+    </script>
+
+
+
+    <title>CS496 by Dennis Tat</title>
+</head>
+
+<body>
+
+  <!--index page -->
+  
+<div data-role="page" id="index">
+    <div data-role="header" data-theme="b">
+         <h1> Media Library</h1>
+
+    </div>
+    
+    <div data-role="content">
+    <div>
+        <a href="#loclist-page" class="ui-btn">View Locations</a>
+    </div>
+    </div>
+</div>
+
+
+  <!--Location list page -->
+  
+<div data-role="page" id="loclist-page">
+    <div data-role="header" data-theme="b">
+    <a href="#index" data-rel="back" data-role="button">Home</a>
+         <h1> Locations</h1>
+
+    </div>
+    
+    <div data-role="content">
+    <div>
+        <a href="#addloc-page" class="ui-btn">Add Location</a>
+    </div>
+        <ul data-role="listview" id="loc-list" data-divider-theme="a" data-inset="true">
+            <li data-role="list-divider" data-theme="b" role="heading">Locations</li>
+        </ul>
+    </div>
+</div>
+
+<!--location detail page -->
+<div data-role="page" id="locdetails-page">
+    <div data-role="header" data-theme="b"><a href="#loclist-page" data-rel="back" data-role="button">Go back</a>
+
+         <h1>Location Details</h1>
+
+    </div>
+    <div data-role="content"></div>
+</div>
+  
+<!-- add location page -->
+<div data-role="page" id="addloc-page">
+    <div data-role="header" data-theme="b"><a href="#loclist-page" data-rel="back" data-role="button" onclick="resetForm();">Go back</a>
+         <h1>Add Location</h1>
+    </div>
+    <div data-role="main" class="ui-content">
+    <form id="locForm" action="#addloc-page" method="post">
+
+        <div>
+        <label for="locNameInput">Name:</label>
+            <input type="text" name="locNameInput" id="locNameInput" placeholder="Name" value="" required pattern=".*\S+.*">
+            
+        </div>
+        <br>
+        <div>
+        <label for="locPhoneInput">Phone Number (format: xxx-xxx-xxxx):</label>
+        <input type="text" name="locPhoneInput" id="locPhoneInput" placeholder="xxx-xxx-xxxx" pattern="^\d{3}-\d{3}-\d{4}$" required>
+        </div>
+        <br>
+        <div>
+        <input type="submit" value="Add Location">
+        </div>
+    </form>
+    </div>
+
+</div>
+
+
+<script type="text/javascript" src="cordova.js"></script>
+
+<script type="text/javascript">
+
+    document.addEventListener("deviceready", onDeviceReady, true);
+
+    function onDeviceReady() {
+
+    }
+
+ </script>
+
+ <script type="text/javascript">
+     function getWeatherLocation() {
+
+    navigator.geolocation.getCurrentPosition
+    (onWeatherSuccess, onWeatherError, { enableHighAccuracy: true });
+}
+
+// Success callback for get geo coordinates
+
+var onWeatherSuccess = function (position) {
+
+    Latitude = position.coords.latitude;
+    Longitude = position.coords.longitude;
+
+    getWeather(Latitude, Longitude);
+}
+
+var OpenWeatherAppKey = "065f5b04418b58287985a5ade2dff70d";
+
+function getWeather(latitude, longitude) {
+
+    var queryString =
+      'http://api.openweathermap.org/data/2.5/weather?lat='
+      + latitude + '&lon=' + longitude + '&appid=' + OpenWeatherAppKey + '&units=imperial';
+
+    $.getJSON(queryString, function (results) {
+
+        if (results.weather.length) {
+
+            $.getJSON(queryString, function (results) {
+
+                if (results.weather.length) {
+
+                    $('#description').text(results.name);
+
+                    document.getElementById("locNameInput").textContent = results.name;
+                    
+                }
+
+            });
+        }
+    }).fail(function () {
+        console.log("error getting location");
+    });
+}
+
+// Error callback
+
+function onWeatherError(error) {
+    console.log('code: ' + error.code + '\n' +
+        'message: ' + error.message + '\n');
+}
+
+
+
+ </script>
+
+</body>
+
+</html>

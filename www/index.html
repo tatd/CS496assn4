@@ -5,30 +5,9 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta name="robots" content="noindex, nofollow">
     <meta name="googlebot" content="noindex, nofollow">
-  <!--
-  <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-  initial-scale=1.0, maximum-scale=1.0, , user-scalable=0
-  -->
+
     <meta name="viewport" content="width=device-width, target-densitydpi=medium-dpi" />
-<!--
-  <script type="text/javascript" src="//code.jquery.com/jquery-1.9.1.js"></script>
--->
-    <script src="https://code.jquery.com/jquery-3.0.0.js"></script> 
-    <script src="https://code.jquery.com/jquery-migrate-3.0.0.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.15.1/jquery.validate.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.15.1/additional-methods.js"></script>
-
-<!--
-  <script type="text/javascript" src="http://code.jquery.com/mobile/1.3.0-beta.1/jquery.mobile-1.3.0-beta.1.js"></script>
--->
-    <script type="text/javascript" src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.js"></script>
-<!--
-  <link rel="stylesheet" type="text/css" href="http://code.jquery.com/mobile/1.3.0-beta.1/jquery.mobile-1.3.0-beta.1.css">
--->
-
-    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
-
+    <link rel="stylesheet" href="/css/jquery.mobile-1.4.5.min.css">
     <style type="text/css">
     .ui-bar {
     padding :5px 0px 5px 0px !important;
@@ -40,31 +19,18 @@
     }
     </style>
 
-  <title>CS496 by Dennis Tat</title>
-<div>
-<script type='text/javascript'>//<![CDATA[
+    <script src="/js/jquery-3.1.0.min.js"></script> 
+    <script src="/js/jquery-migrate-3.0.0.min.js"></script>
 
-//assuming this comes from an ajax call
+    <script src="/js/jquery.validate.min.js"></script>
+    <script src="/js/additional-methods.min.js"></script>
+
+    <script type="text/javascript" src="/js/jquery.mobile-1.4.5.min.js"></script>
+
+    <script type='text/javascript'>
 var info =[];
 var locdata = [];
 
-//pageinit event for first page
-//triggers only once
-//write all your on-load functions and event handlers pertaining to page1
-
-/*
-$(document).on("pageinit", "#testpage", function(){
-        $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/locations", function(data){
-            var output = '';
-            locdata = [];
-            locdata = data.items;
-            $.each(locdata, function(index, value){                   
-             output += '<li><a href="#" id="' + locdata.id + '">' +locdata.name+ '</a></li>';
-            });
-            $('#listitem').html(output);
-        });
-    });
-*/
 $(document).on("pageshow", "#loclist-page", function(){
     $("#loc-list").listview("refresh");
 });
@@ -117,11 +83,6 @@ $(document).on("pagebeforeshow", "#loclist-page", function getLocations() {
 });
 
 
-
-//use pagebeforeshow
-//DONT USE PAGEINIT! 
-//the reason is you want this to happen every single time
-//pageinit will happen only once
 $(document).on("pagebeforeshow", "#locdetails-page", function () {
     //get from data - you put this here when the "a" wa clicked in the previous page
     var info = $(this).data("info");
@@ -196,28 +157,10 @@ $('#locForm').validate({
             dataType: "json",
             contentType: "application/json"
         });
-/*
-        var postTo = 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/newlocation';
-        var insertResponse = $.post(postTo,({name: $('[name=locNameInput]').val(), phone_number: $('[name=locPhoneInput]').val()}),
 
-        function(data) {
-        console.log(insertResponse);
-        alert(data);
-        console.log(data);
-        if(data != "") {
-            console.log("success");
-            // do something
-        } else {
-            console.log("Couldn't connect");
-            // couldn't connect
-        }
-        }, "application/json");
-*/
-        //$("#loc-list").listview("refresh");
-        //$('#locForm')[0].reset();
         resetForm();
         
-        $(':mobile-pagecontainer').pagecontainer('change', '#loclist-page', {
+        $(':mobile-pagecontainer').pagecontainer('change', '#addloc-page', {
             reload: false
         });
         
@@ -262,21 +205,13 @@ function toast(message) {
     $toast.appendTo($.mobile.pageContainer).delay(2000);
     $toast.fadeOut(400, removeToast);
 }
+    </script>
 
-</script>
-
+  <title>CS496 by Dennis Tat</title>
   
 </head>
 
 <body>
-<!--
-    <div data-role="page" id="testpage">
-        <div data-role="content">    
-             <ul data-role="listview" id="listitem" data-divider-theme="a" data-inset="true">
-            </ul>
-        </div>
-    </div>
--->
 
   <!--index page -->
   
@@ -329,7 +264,7 @@ function toast(message) {
          <h1>Add Location</h1>
     </div>
     <div data-role="main" class="ui-content">
-    <form id="locForm" action="#loclist-page" method="post">
+    <form id="locForm" action="#addloc-page" method="post">
 
         <div>
         <label for="locNameInput">Name:</label>
@@ -346,11 +281,13 @@ function toast(message) {
         </div>
     </form>
     </div>
-
-    <div data-role="content"></div>
 </div>
 
+
+
 </body>
+
+    
 
 </html>
 
