@@ -608,9 +608,33 @@ function getItems() {
         });
 }
 
+function deleteItem(){
+    var deleteItemID = document.getElementById("editItemID").value;
+    $.ajax({
+        type: 'DELETE',
+        url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/itemmodel/' + deleteItemID,
+        function(data){
+        }
+    });
+    $(':mobile-pagecontainer').pagecontainer('change', '#itemlist-page', {
+            reload: false
+            });
+    toast("Item deleted");
+}
 
-
-
+function deleteLocation(){
+    var deleteLocationID = document.getElementById("editLocID").value;
+    $.ajax({
+        type: 'DELETE',
+        url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/locationmodel/' + deleteLocationID,
+        function(data){
+        }
+    });
+    $(':mobile-pagecontainer').pagecontainer('change', '#loclist-page', {
+            reload: false
+            });
+    toast("Location deleted");
+}
 
 
 
@@ -746,6 +770,7 @@ function getCurrentLocation(){
 <div data-role="page" id="locdetails-page">
     <div data-role="header" data-theme="b"><a href="#loclist-page" data-rel="back" data-role="button">Go back</a>
         <h1>Edit Location</h1>
+        <a data-role="button" onclick="deleteLocation();">Delete</a>
     </div>
     <div data-role="content"></div>
 
@@ -824,6 +849,7 @@ function getCurrentLocation(){
 <div data-role="page" id="itemdetails-page">
     <div data-role="header" data-theme="b"><a href="#itemlist-page" data-rel="back" data-role="button" onclick="resetForm();">Go back</a>
         <h1>Edit Item</h1>
+        <a data-role="button" onclick="deleteItem();">Delete</a>
     </div>
 
     <div data-role="main" class="ui-content">
