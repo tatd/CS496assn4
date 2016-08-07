@@ -14,9 +14,10 @@
     margin :5px 0px 5px 0px !important;
     }
 
-    .error {
-    color:red;
-    }
+    
+    /*.error {
+    color:black;
+    }*/
     </style>
 
     <script src="/js/jquery-3.1.0.min.js"></script> 
@@ -114,6 +115,8 @@ $(document).on("pagebeforeshow", "#locdetails-page", function () {
    // $(this).find("[data-role=content]").html(infoview);
 });
 
+
+
 $(window).load(function(){
 $('#locForm').validate({
     rules: {
@@ -129,10 +132,10 @@ $('#locForm').validate({
     },
     messages: {
         locNameInput: {
-            required: "Please enter a name."
+            required: "<font color='red'>Please enter a name.</font>"
         },
         locPhoneInput: {
-            required: "Please enter a phone number."
+            required: "<font color='red'>Please enter a phone number.</font>"
         }/*,
         lname: {
             required: "Please enter your email."
@@ -195,10 +198,10 @@ $('#locEditForm').validate({
     },
     messages: {
         editLocNameInput: {
-            required: "Please enter a name."
+            required: "<font color='red'>Please enter a name.</font>"
         },
         editLocPhoneInput: {
-            required: "Please enter a phone number."
+            required: "<font color='red'>Please enter a phone number.</font>"
         }/*,
         lname: {
             required: "Please enter your email."
@@ -400,43 +403,67 @@ $(document).on("pagebeforeshow", "#itemdetails-page", function () {
     //$(this).find("[data-role=content]").html(infoview);
 });
 
+$(document).on("pagebeforeshow", "#additem-page", function() {
+    $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/locations?limit=100", function(data){
+
+        info = data.items;
+        //var sel = '';
+        var sel = '<option selected disabled hidden style="display: none" value=""></option>';
+        $.each(info, function(i, location) {
+            sel += '<option name="optiontext" value="';
+            sel += location.id;
+            sel += '">'
+            sel += location.name;
+            sel += '</option>';
+        });
+
+        $('#itemLocationInput').empty();
+        $('#itemLocationInput').append(sel);
+    });
+});
+
 $(window).load(function(){
 $('#itemForm').validate({
     rules: {
         itemTitleInput: {
             required: true
-        }/*,
-        locPhoneInput: {
-            required: true
         },
+        itemLocationInput: {
+            required: true
+        }/*,
         email: {
             required: true
         }*/
     },
     messages: {
         itemTitleInput: {
-            required: "Please enter a title."
-        }/*,
-        locPhoneInput: {
-            required: "Please enter a phone number."
+            required: "<font color='red'>Please enter a title.</font>"
         },
+        itemLocationInput: {
+            required: "<font color='red'>Please select a location.</font>"
+        }/*,
         lname: {
             required: "Please enter your email."
         }*/
     },
     errorPlacement: function (error, element) {
-        error.appendTo(element.parent().prev());
+        if(element.attr("id") == "itemLocationInput"){
+            error.appendTo('#errordiv');
+        }
+        if(element.attr("id") == "itemTitleInput"){
+            error.appendTo('#errordiv0');
+        }
     },
-    submitHandler: function (locForm) {
-        console.log($('[name=itemTitleInput]').val());
+    submitHandler: function (itemForm) {
+        //console.log($('[name=itemTitleInput]').val());
         //console.log($('[name=locPhoneInput]').val());
 
         $.ajax({
             type: 'POST',
             url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/newitem',
             data: JSON.stringify({
-                title: $('[name=itemTitleInput]').val(), 
-                //phone_number: $('[name=locPhoneInput]').val()
+                title: $('[name=itemTitleInput]').val(),
+                locationID: $('[name=itemLocationInput]').val()
             }),
             function(data) {
                 console.log(data);
@@ -452,7 +479,7 @@ $('#itemForm').validate({
             contentType: "application/json"
         });
 
-        resetForm();
+        resetForm1();
         
         $(':mobile-pagecontainer').pagecontainer('change', '#additem-page', {
             reload: false
@@ -481,7 +508,7 @@ $('#itemEditForm').validate({
     },
     messages: {
         editItemTitleInput: {
-            required: "Please enter a title."
+            required: "<font color='red'>Please enter a title.</font>"
         }/*,
         editLocPhoneInput: {
             required: "Please enter a phone number."
@@ -493,9 +520,10 @@ $('#itemEditForm').validate({
     errorPlacement: function (error, element) {
         error.appendTo(element.parent().prev());
     },
-    submitHandler: function (editLocForm) {
+    submitHandler: function (itemEditForm) {
         var putItemID = $('[name=editItemID]').val();
-        //console.log($('[name=editLocNameInput]').val());
+        console.log("item title: ", $('[name=editItemTitleInput]').val());
+        console.log("item loc: ", $('[name=editItemLocationInput]').val());
         //console.log($('[name=editLocPhoneInput]').val());
         //console.log($(putLocID));
 
@@ -503,7 +531,8 @@ $('#itemEditForm').validate({
             type: 'PUT',
             url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/itemmodel/' + putItemID,
             data: JSON.stringify({
-                name: $('[name=editItemTitleInput]').val(), 
+                title: $('[name=editItemTitleInput]').val(),
+                locationID: $('[name=editItemLocationInput]').val() 
                 //phone_number: $('[name=editLocPhoneInput]').val()
             }),
             function(data) {
@@ -587,6 +616,13 @@ function getItems() {
 
 function resetForm() {
     $('#locForm')[0].reset();
+    //$('#locform').validate().resetForm();
+    $("label.error").hide();
+  $(".error").removeClass("error");
+}
+
+function resetForm1() {
+    $('#itemForm')[0].reset();
     //$('#locform').validate().resetForm();
     $("label.error").hide();
   $(".error").removeClass("error");
@@ -800,12 +836,11 @@ function getCurrentLocation(){
         <br>
         <div>
             <label for="editItemLocationInput">Location:</label>
-                
-        </div>
         <input type="hidden" name="editItemID" id="editItemID">
         <select name="editItemLocationInput" id="editItemLocationInput">
             
         </select>
+        </div>
         <br>
         <div>
             <input type="submit" value="Save Changes">
@@ -818,23 +853,23 @@ function getCurrentLocation(){
   
 <!-- add item page -->
 <div data-role="page" id="additem-page">
-    <div data-role="header" data-theme="b"><a href="#loclist-page" data-rel="back" data-role="button" onclick="resetForm();">Go back</a>
-         <h1>Add Location</h1>
+    <div data-role="header" data-theme="b"><a href="#itemlist-page" data-rel="back" data-role="button" onclick="resetForm1();">Go back</a>
+         <h1>Add Item</h1>
     </div>
     <div data-role="main" class="ui-content">
-    <form id="locForm" action="#addloc-page" method="post">
-
+    <form id="itemForm" action="#additem-page" method="post">
+    <div id="errordiv0"></div>
         <div>
-        <label for="locNameInput">Name:</label>
-        <input type="text" name="locNameInput" id="locNameInput" placeholder="Name" value="" required pattern=".*\S+.*">
-
-        <button type="button" class="ui-btn ui-icon-location ui-btn-icon-left" onclick="getCurrentLocation();">Use Current Location</button>
-
+        <label for="itemTitleInput">Title:</label>
+        <input type="text" name="itemTitleInput" id="itemTitleInput" placeholder="Title" value="" required pattern=".*\S+.*">
         </div>
         <br>
+        <div id="errordiv"></div>
         <div>
-        <label for="locPhoneInput">Phone Number (format: xxx-xxx-xxxx):</label>
-        <input type="text" name="locPhoneInput" id="locPhoneInput" placeholder="xxx-xxx-xxxx" pattern="^\d{3}-\d{3}-\d{4}$" required>
+            <label for="itemLocationInput">Location:</label>
+        <select name="itemLocationInput" id="itemLocationInput" required>
+            
+        </select>
         </div>
         <br>
         <div>
