@@ -29,6 +29,8 @@
     <script type="text/javascript" src="/js/jquery.mobile-1.4.5.min.js"></script>
 
     <script type='text/javascript'>
+//http://stackoverflow.com/questions/18051227/how-to-populate-a-jquery-mobile-listview-with-json-data
+
 var globalUsername = "";
 var info =[];
 var locdata = [];
@@ -51,33 +53,25 @@ $(document).on("pagebeforeshow", "#loclist-page", function getLocations0() {
     var li = "";
     //container for $li to be added
     $.each(info, function (i, location) {
-        //add the <li> to "li" variable
-        //note the use of += in the variable
-        //meaning I'm adding to the existing data. not replacing it.
-        //store index value in array as id of the <a> tag
+        //add to list items
         li += '<li><a href="#" id="' + i + '" class="info-go">' + location.name +'<p>' + location.phone_number +'</p></a></li>';
     });
     $("#loc-list").empty();
     //append list to ul
     $("#loc-list").append(li).promise().done(function () {
-        //wait for append to finish - thats why you use a promise()
-        //done() will run after append is done
-        //add the click event for the redirection to happen to #details-page
+        //append list items to list
         $(this).off();
         $(this).on("click", ".info-go", function (e) {
             e.preventDefault();
             //store the information in the next page's data
             $("#locdetails-page").data("info", info[this.id]);
-            //change the page # to second page. 
-            //Now the URL in the address bar will read index.html#details-page
-            //where #details-page is the "id" of the second page
-            //we're gonna redirect to that now using changePage() method
+
+            //change the page # to details page when clicked 
             console.log("changing pages");
             $.mobile.changePage("#locdetails-page");
             return false;
         });
 
-        //refresh list to enhance its styling.
         $(this).listview("refresh");
     });
         });
@@ -101,22 +95,10 @@ $(document).on("pagebeforeshow", "#locdetails-page", function () {
     document.getElementById("editLocPhoneInput").value = info.phone_number;
 
     document.getElementById("editLocID").value = info.id;
-/*
-    //use for..in to iterate through object
-    for (var key in info) {
-        //Im using grid layout here.
-        //use any kind of layout you want.
-        //key is the key of the property in the object 
-        //if obj = {name: 'k'}
-        //key = name, value = k
 
-        info_view += '<div class="ui-grid-a"><div class="ui-block-a"><div class="ui-bar field" style="font-weight : bold; text-align: left;">' + key + '</div></div><div class="ui-block-b"><div class="ui-bar value" style="width : 75%">' + info[key] + '</div></div></div>';
-    }*/
-    //add this to html
-   // $(this).find("[data-role=content]").html(infoview);
 });
 
-
+// handles login form
 $(window).load(function(){
 $('#loginForm').validate({
     /*rules: {
@@ -151,6 +133,7 @@ $('#loginForm').validate({
         paramPassword = $('[name=passwordLogin]').val();
 
         $.ajax({
+            // GET request to find matching username and password
             type: 'GET',
             url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/users?password=' + paramPassword + '&username=' + paramUsername,
             dataType: "json",
@@ -159,8 +142,10 @@ $('#loginForm').validate({
                 //console.log(data);
                 if(data.items != undefined) {
                     //console.log("success");
+                    // set username for application
                     globalUsername = data.items[0].username;
 
+                    // fill divs with username
                     var usernameDivs = document.getElementsByName("usernameHeader");
                     var i;
                     for(i = 0; i < usernameDivs.length; i++){
@@ -178,6 +163,8 @@ $('#loginForm').validate({
 
                 } else {
                     //console.log("Error");
+
+                    // username and password don't match
                     toast("Log-in Error");
                     return false;
                 }
@@ -194,7 +181,7 @@ $('#loginForm').validate({
 });
 });
 
-
+// handles create account form
 $(window).load(function(){
 $('#createAccountForm').validate({
     /*rules: {
@@ -226,6 +213,7 @@ $('#createAccountForm').validate({
         //console.log($('[name=createEmail]').val());
         //console.log($('[name=createPassword]').val());
 
+        // POST a new user
         $.ajax({
             type: 'POST',
             url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/newuser',
@@ -293,6 +281,8 @@ $('#locForm').validate({
         console.log($('[name=locNameInput]').val());
         console.log($('[name=locPhoneInput]').val());
 
+        // POST request to add new location
+        // gets user input from form
         $.ajax({
             type: 'POST',
             url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/newlocation',
@@ -314,12 +304,15 @@ $('#locForm').validate({
             contentType: "application/json"
         });
 
+        // reset form after data is sent
         resetForm('#locForm');
         
+        // go back to add location page
         $(':mobile-pagecontainer').pagecontainer('change', '#addloc-page', {
             reload: false
         });
         
+        // notify user that new location was added
         toast("Location added");
         return false;
         
@@ -328,6 +321,7 @@ $('#locForm').validate({
 });
 });
 
+// handles location edit form
 $(window).load(function(){
 $('#locEditForm').validate({
     rules: {
@@ -361,6 +355,7 @@ $('#locEditForm').validate({
         //console.log($('[name=editLocPhoneInput]').val());
         //console.log($(putLocID));
 
+        // PUT request at specific item ID
         $.ajax({
             type: 'PUT',
             url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/locationmodel/' + putLocID,
@@ -396,6 +391,7 @@ $('#locEditForm').validate({
 });
 });
 
+
 function getLocations() {
     $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/locations?limit=100", function(data){
 
@@ -405,31 +401,23 @@ function getLocations() {
             info = locdata;
             //console.log(info);
             //console.log(locdata);
+
     //set up string for adding <li/>
     var li = "";
-    //container for $li to be added
+
     $.each(info, function (i, location) {
-        //add the <li> to "li" variable
-        //note the use of += in the variable
-        //meaning I'm adding to the existing data. not replacing it.
-        //store index value in array as id of the <a> tag
         li += '<li><a href="#" id="' + i + '" class="info-go">' + location.name +'<p>' + location.phone_number +'</p></a></li>';
     });
     $("#loc-list").empty();
     //append list to ul
     $("#loc-list").append(li).promise().done(function () {
-        //wait for append to finish - thats why you use a promise()
-        //done() will run after append is done
-        //add the click event for the redirection to happen to #details-page
+
+        //add the click event for the redirection to #details-page
         $(this).off();
         $(this).on("click", ".info-go", function (e) {
             e.preventDefault();
-            //store the information in the next page's data
             $("#locdetails-page").data("info", info[this.id]);
-            //change the page # to second page. 
-            //Now the URL in the address bar will read index.html#details-page
-            //where #details-page is the "id" of the second page
-            //we're gonna redirect to that now using changePage() method
+            
             console.log("changing pages");
             $.mobile.changePage("#locdetails-page");
             return false;
@@ -441,10 +429,7 @@ function getLocations() {
         });
 }
 
-
-
-
-
+// refresh item list on page switch
 $(document).on("pageshow", "#itemlist-page", function(){
     getItems();
 });
@@ -463,33 +448,21 @@ $(document).on("pagebeforeshow", "#itemlist-page", function getItems0() {
     var li = "";
     //container for $li to be added
     $.each(info, function (i, item) {
-        //add the <li> to "li" variable
-        //note the use of += in the variable
-        //meaning I'm adding to the existing data. not replacing it.
-        //store index value in array as id of the <a> tag
+
         li += '<li><a href="#" id="' + i + '" class="info-go">' + item.title +'<p>' + item.locationName +'</p></a></li>';
     });
     $("#item-list").empty();
     //append list to ul
     $("#item-list").append(li).promise().done(function () {
-        //wait for append to finish - thats why you use a promise()
-        //done() will run after append is done
-        //add the click event for the redirection to happen to #details-page
         $(this).off();
         $(this).on("click", ".info-go", function (e) {
             e.preventDefault();
-            //store the information in the next page's data
             $("#itemdetails-page").data("info", info[this.id]);
-            //change the page # to second page. 
-            //Now the URL in the address bar will read index.html#details-page
-            //where #details-page is the "id" of the second page
-            //we're gonna redirect to that now using changePage() method
             console.log("changing pages");
             $.mobile.changePage("#itemdetails-page");
             return false;
         });
 
-        //refresh list to enhance its styling.
         $(this).listview("refresh");
     });
         });
@@ -497,17 +470,18 @@ $(document).on("pagebeforeshow", "#itemlist-page", function getItems0() {
 
 
 $(document).on("pagebeforeshow", "#itemdetails-page", function () {
-    //get from data - you put this here when the "a" wa clicked in the previous page
     var info = $(this).data("info");
     //string to put HTML in
     var info_view = "";
     var infoview = "";
     var infoview2 = "";
 
+    // GET request to get locations
     $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/locations?limit=100", function(data){
         info2 = data.items;
         var sel = '';
 
+        // add html to the string for each location
         $.each(info2, function(i, location) {
             sel += '<option value="';
             sel += location.id;
@@ -523,37 +497,20 @@ $(document).on("pagebeforeshow", "#itemdetails-page", function () {
         $('#editItemLocationInput').val(info.locationID).change();
     });
 
-
-/*
-    infoview += '<div class="ui-grid-a"><div class="ui-block-a"><div class="ui-bar field" style="font-weight : bold; text-align: left;">Name: ' + '</div></div><div class="ui-block-b"><div class="ui-bar value" style="width : 75%">' + info.name + '</div></div> <div class="ui-block-a"><div class="ui-bar field" style="font-weight : bold; text-align: left;">Phone Number: ' + '</div></div><div class="ui-block-b"><div class="ui-bar value" style="width : 75%">' + info.phone_number + '</div></div> </div>';
-
-    infoview +='<div data-role="main" class="ui-content"><div><div><form id="locEditForm" action="#edditloc-page" method="post"><div><label for="editLocNameInput">Name:</label><input type="text" name="editLocNameInput" id="editLocNameInput" placeholder="Name" value="" required pattern=".*\S+.*"></div></form></div></div></div>';
-*/
+    // populate inputs with info
     document.getElementById("editItemTitleInput").value = info.title;
-
-
     document.getElementById("editItemID").value = info.id;
-/*
-    //use for..in to iterate through object
-    for (var key in info) {
-        //Im using grid layout here.
-        //use any kind of layout you want.
-        //key is the key of the property in the object 
-        //if obj = {name: 'k'}
-        //key = name, value = k
 
-        info_view += '<div class="ui-grid-a"><div class="ui-block-a"><div class="ui-bar field" style="font-weight : bold; text-align: left;">' + key + '</div></div><div class="ui-block-b"><div class="ui-bar value" style="width : 75%">' + info[key] + '</div></div></div>';
-    }*/
-    //add this to html
-    //$(this).find("[data-role=content]").html(infoview);
 });
 
 $(document).on("pagebeforeshow", "#additem-page", function() {
+    // GET request to get locations
     $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/locations?limit=100", function(data){
 
         info = data.items;
         //var sel = '';
         var sel = '<option selected disabled hidden style="display: none" value=""></option>';
+        // select input for location
         $.each(info, function(i, location) {
             sel += '<option name="optiontext" value="';
             sel += location.id;
@@ -567,6 +524,7 @@ $(document).on("pagebeforeshow", "#additem-page", function() {
     });
 });
 
+// handles new item form
 $(window).load(function(){
 $('#itemForm').validate({
     rules: {
@@ -603,6 +561,7 @@ $('#itemForm').validate({
         //console.log($('[name=itemTitleInput]').val());
         //console.log($('[name=locPhoneInput]').val());
 
+        // POST new item
         $.ajax({
             type: 'POST',
             url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/newitem',
@@ -639,6 +598,7 @@ $('#itemForm').validate({
 });
 });
 
+// handles item edit form
 $(window).load(function(){
 $('#itemEditForm').validate({
     rules: {
@@ -673,6 +633,7 @@ $('#itemEditForm').validate({
         //console.log($('[name=editLocPhoneInput]').val());
         //console.log($(putLocID));
 
+        // PUT item at specific item ID
         $.ajax({
             type: 'PUT',
             url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/itemmodel/' + putItemID,
@@ -710,6 +671,7 @@ $('#itemEditForm').validate({
 });
 });
 
+// GET request to refresh the list of items
 function getItems() {
     $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/items?limit=100&username=" + globalUsername, function(data){
 
@@ -723,38 +685,28 @@ function getItems() {
     var li = "";
     //container for $li to be added
     $.each(info, function (i, item) {
-        //add the <li> to "li" variable
-        //note the use of += in the variable
-        //meaning I'm adding to the existing data. not replacing it.
-        //store index value in array as id of the <a> tag
         li += '<li><a href="#" id="' + i + '" class="info-go">' + item.title +'<p>' + item.locationName +'</p></a></li>';
     });
     $("#item-list").empty();
     //append list to ul
     $("#item-list").append(li).promise().done(function () {
-        //wait for append to finish - thats why you use a promise()
-        //done() will run after append is done
-        //add the click event for the redirection to happen to #details-page
+
         $(this).off();
         $(this).on("click", ".info-go", function (e) {
             e.preventDefault();
-            //store the information in the next page's data
             $("#itemdetails-page").data("info", info[this.id]);
-            //change the page # to second page. 
-            //Now the URL in the address bar will read index.html#details-page
-            //where #details-page is the "id" of the second page
-            //we're gonna redirect to that now using changePage() method
+            
             console.log("changing pages");
             $.mobile.changePage("#itemdetails-page");
             return false;
         });
 
-        //refresh list to enhance its styling.
         $(this).listview("refresh");
     });
         });
 }
 
+// DELETE request for item ID
 function deleteItem(){
     var deleteItemID = document.getElementById("editItemID").value;
     $.ajax({
@@ -769,6 +721,7 @@ function deleteItem(){
     toast("Item deleted");
 }
 
+// DELETE request for location ID
 function deleteLocation(){
     var deleteLocationID = document.getElementById("editLocID").value;
     $.ajax({
@@ -783,6 +736,7 @@ function deleteLocation(){
     toast("Location deleted");
 }
 
+// clears username when user logs out
 function logout(){
     globalUsername = "";
     var usernameDivs = document.getElementsByName("usernameHeader");
@@ -793,6 +747,7 @@ function logout(){
     //console.log("logged out. username: ", globalUsername);
 }
 
+// function to reset the input form
 function resetForm(inputForm) {
     //$('#locForm')[0].reset();
     $(inputForm)[0].reset();
@@ -800,12 +755,14 @@ function resetForm(inputForm) {
   $(".error").removeClass("error");
 }
 
+/*
 function resetForm1() {
     $('#itemForm')[0].reset();
     //$('#locform').validate().resetForm();
     $("label.error").hide();
   $(".error").removeClass("error");
 }
+*/
 
 // toast-like notification
 // https://gist.github.com/kamranzafar/3136584
@@ -833,10 +790,12 @@ function toast(message) {
     $toast.appendTo($.mobile.pageContainer).delay(2000);
     $toast.fadeOut(400, removeToast);
 }
-    </script>
+</script>
 
 
-    <script type="text/javascript">
+<script type="text/javascript">
+//https://github.com/apache/cordova-plugin-geolocation
+// function to get current GPS coordinates
 var OpenWeatherAppKey = "065f5b04418b58287985a5ade2dff70d";
 var lat = 47.61;
 var long = -122.33;
@@ -868,6 +827,7 @@ function getWeather(latitude, longitude) {
         }
     }).fail(function () {
         console.log("error getting location");
+        toast("Error getting location");
     });
 }
 
@@ -904,7 +864,6 @@ function getCurrentLocation(){
         <div>
             <input type="submit" value="Log in">
         </div>
-        <a href="#index1" class="ui-btn">index</a>
     </form>
     <br>
     <h2>Create an Account</h2>
