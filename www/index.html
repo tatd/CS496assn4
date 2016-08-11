@@ -29,6 +29,7 @@
     <script type="text/javascript" src="/js/jquery.mobile-1.4.5.min.js"></script>
 
     <script type='text/javascript'>
+var globalUsername = "";
 var info =[];
 var locdata = [];
 
@@ -116,6 +117,150 @@ $(document).on("pagebeforeshow", "#locdetails-page", function () {
 });
 
 
+$(window).load(function(){
+$('#loginForm').validate({
+    /*rules: {
+        locNameInput: {
+            required: true
+        },
+        locPhoneInput: {
+            required: true
+        },
+        email: {
+            required: true
+        }
+    },
+    messages: {
+        locNameInput: {
+            required: "<font color='red'>Please enter a name.</font>"
+        },
+        locPhoneInput: {
+            required: "<font color='red'>Please enter a phone number.</font>"
+        },
+        lname: {
+            required: "Please enter your email."
+        }
+    },
+    errorPlacement: function (error, element) {
+        error.appendTo(element.parent().prev());
+    },*/
+    submitHandler: function (loginForm) {
+        //console.log($('[name=createEmail]').val());
+        //console.log($('[name=createPassword]').val());
+        paramUsername = $('[name=usernameLogin]').val();
+        paramPassword = $('[name=passwordLogin]').val();
+
+        $.ajax({
+            type: 'GET',
+            url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/users?password=' + paramPassword + '&username=' + paramUsername,
+            dataType: "json",
+            contentType: "application/json"
+        }).done(function(data) {
+                //console.log(data);
+                if(data.items != undefined) {
+                    //console.log("success");
+                    globalUsername = data.items[0].username;
+
+                    var usernameDivs = document.getElementsByName("usernameHeader");
+                    var i;
+                    for(i = 0; i < usernameDivs.length; i++){
+                    usernameDivs[i].innerHTML = globalUsername;
+                    }
+
+                    //console.log("username: ", globalUsername);
+
+                    $(':mobile-pagecontainer').pagecontainer('change', '#index1', {
+                    reload: false
+                    });
+        
+                    toast("Log-in successful");
+                    return false;
+
+                } else {
+                    //console.log("Error");
+                    toast("Log-in Error");
+                    return false;
+                }
+            });
+
+        //globalUsername = paramUsername;
+        
+        resetForm('#loginForm');
+        
+        
+        
+
+    }
+});
+});
+
+
+$(window).load(function(){
+$('#createAccountForm').validate({
+    /*rules: {
+        locNameInput: {
+            required: true
+        },
+        locPhoneInput: {
+            required: true
+        },
+        email: {
+            required: true
+        }
+    },
+    messages: {
+        locNameInput: {
+            required: "<font color='red'>Please enter a name.</font>"
+        },
+        locPhoneInput: {
+            required: "<font color='red'>Please enter a phone number.</font>"
+        },
+        lname: {
+            required: "Please enter your email."
+        }
+    },
+    errorPlacement: function (error, element) {
+        error.appendTo(element.parent().prev());
+    },*/
+    submitHandler: function (createAccountForm) {
+        //console.log($('[name=createEmail]').val());
+        //console.log($('[name=createPassword]').val());
+
+        $.ajax({
+            type: 'POST',
+            url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/newuser',
+            data: JSON.stringify({
+                username: $('[name=createUsername]').val(), 
+                password: $('[name=createPassword]').val()
+            }),
+            function(data) {
+                console.log(data);
+                if(data != "") {
+                    console.log("success");
+                    // do something
+                } else {
+                    console.log("Couldn't connect");
+                    // couldn't connect
+                }
+            },
+            dataType: "json",
+            contentType: "application/json"
+        });
+
+        resetForm('#createAccountForm');
+        
+        $(':mobile-pagecontainer').pagecontainer('change', '#index', {
+            reload: false
+        });
+        
+        toast("Account Created");
+        return false;
+        
+
+    }
+});
+});
+
 
 $(window).load(function(){
 $('#locForm').validate({
@@ -169,7 +314,7 @@ $('#locForm').validate({
             contentType: "application/json"
         });
 
-        resetForm();
+        resetForm('#locForm');
         
         $(':mobile-pagecontainer').pagecontainer('change', '#addloc-page', {
             reload: false
@@ -306,7 +451,7 @@ $(document).on("pageshow", "#itemlist-page", function(){
 
 
 $(document).on("pagebeforeshow", "#itemlist-page", function getItems0() {
-    $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/items?limit=100", function(data){
+    $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/items?limit=100&username=" + globalUsername, function(data){
 
             itemdata = data.items;
             //console.log(locdata[0].name);
@@ -463,7 +608,8 @@ $('#itemForm').validate({
             url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/newitem',
             data: JSON.stringify({
                 title: $('[name=itemTitleInput]').val(),
-                locationID: $('[name=itemLocationInput]').val()
+                locationID: $('[name=itemLocationInput]').val(),
+                username: globalUsername
             }),
             function(data) {
                 console.log(data);
@@ -479,7 +625,7 @@ $('#itemForm').validate({
             contentType: "application/json"
         });
 
-        resetForm1();
+        resetForm('#itemForm');
         
         $(':mobile-pagecontainer').pagecontainer('change', '#additem-page', {
             reload: false
@@ -522,8 +668,8 @@ $('#itemEditForm').validate({
     },
     submitHandler: function (itemEditForm) {
         var putItemID = $('[name=editItemID]').val();
-        console.log("item title: ", $('[name=editItemTitleInput]').val());
-        console.log("item loc: ", $('[name=editItemLocationInput]').val());
+        //console.log("item title: ", $('[name=editItemTitleInput]').val());
+        //console.log("item loc: ", $('[name=editItemLocationInput]').val());
         //console.log($('[name=editLocPhoneInput]').val());
         //console.log($(putLocID));
 
@@ -532,7 +678,8 @@ $('#itemEditForm').validate({
             url: 'https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/itemmodel/' + putItemID,
             data: JSON.stringify({
                 title: $('[name=editItemTitleInput]').val(),
-                locationID: $('[name=editItemLocationInput]').val() 
+                locationID: $('[name=editItemLocationInput]').val(), 
+                username: globalUsername
                 //phone_number: $('[name=editLocPhoneInput]').val()
             }),
             function(data) {
@@ -564,7 +711,7 @@ $('#itemEditForm').validate({
 });
 
 function getItems() {
-    $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/items?limit=100", function(data){
+    $.getJSON("https://cs496-1373.appspot.com/_ah/api/mylibrary/v1/items?limit=100&username=" + globalUsername, function(data){
 
             itemdata = data.items;
             //console.log(locdata[0].name);
@@ -636,11 +783,19 @@ function deleteLocation(){
     toast("Location deleted");
 }
 
+function logout(){
+    globalUsername = "";
+    var usernameDivs = document.getElementsByName("usernameHeader");
+        var i;
+        for(i = 0; i < usernameDivs.length; i++){
+        usernameDivs[i].innerHTML = globalUsername;
+        }
+    //console.log("logged out. username: ", globalUsername);
+}
 
-
-function resetForm() {
-    $('#locForm')[0].reset();
-    //$('#locform').validate().resetForm();
+function resetForm(inputForm) {
+    //$('#locForm')[0].reset();
+    $(inputForm)[0].reset();
     $("label.error").hide();
   $(".error").removeClass("error");
 }
@@ -737,10 +892,10 @@ function getCurrentLocation(){
     
     <div data-role="content">
     <h2>Log in</h2>
-    <form>
+    <form id="loginForm" action="#index1" method="post">
         <div>
-            <label for="usernameLogin">Email:</label>
-            <input type="email" name="emailLogin" placeholder="Email" value="">
+            <label for="usernameLogin">Username:</label>
+            <input type="text" name="usernameLogin" placeholder="Username" value="">
         </div>
         <div>
             <label for="passwordLogin">Password:</label>
@@ -768,17 +923,17 @@ function getCurrentLocation(){
     </div>
     <div data-role="content">
     <h2>Create an Account</h2>
-    <form>
+    <form id="createAccountForm" action="#index" method="post">
         <div>
-            <label for="usernameLogin">Email:</label>
-            <input type="email" name="emailLogin" placeholder="Email" value="">
+            <label for="createUsername">Username:</label>
+            <input type="text" name="createUsername" placeholder="Username" value="">
         </div>
         <div>
-            <label for="passwordLogin">Password:</label>
-            <input type="password" name="passwordLogin" placeholder="Password" value="">
+            <label for="createPassword">Password:</label>
+            <input type="password" name="createPassword" placeholder="Password" value="">
         </div>
         <div>
-            <input type="submit" value="Log in">
+            <input type="submit" value="Create Account">
         </div>
     </form>
     </div>
@@ -789,8 +944,9 @@ function getCurrentLocation(){
   
 <div data-role="page" id="index1">
     <div data-role="header" data-theme="b">
-        <a href="#index" class="ui-btn">Logout</a>
+        <a href="#index" class="ui-btn" onclick="logout();">Log Out</a>
          <h1> Media Library</h1>
+         <a class="ui-btn ui-state-disabled" name="usernameHeader"></a>
 
     </div>
     
@@ -809,8 +965,9 @@ function getCurrentLocation(){
   
 <div data-role="page" id="loclist-page" data-cache="false">
     <div data-role="header" data-theme="b">
-    <a href="#index1" data-role="button">Home</a>
-         <h1> Locations</h1>
+        <a href="#index1" data-role="button">Home</a>
+        <h1> Locations</h1>
+        <a class="ui-btn ui-state-disabled" name="usernameHeader"></a>
 
     </div>
     
@@ -826,7 +983,8 @@ function getCurrentLocation(){
 
 <!--location detail page -->
 <div data-role="page" id="locdetails-page">
-    <div data-role="header" data-theme="b"><a href="#loclist-page" data-rel="back" data-role="button">Go back</a>
+    <div data-role="header" data-theme="b">
+        <a href="#loclist-page" data-rel="back" data-role="button">Go back</a>
         <h1>Edit Location</h1>
         <a data-role="button" onclick="deleteLocation();">Delete</a>
     </div>
@@ -856,8 +1014,10 @@ function getCurrentLocation(){
   
 <!-- add location page -->
 <div data-role="page" id="addloc-page">
-    <div data-role="header" data-theme="b"><a href="#loclist-page" data-rel="back" data-role="button" onclick="resetForm();">Go back</a>
-         <h1>Add Location</h1>
+    <div data-role="header" data-theme="b">
+        <a href="#loclist-page" data-rel="back" data-role="button" onclick="resetForm('#locForm');">Go back</a>
+        <h1>Add Location</h1>
+        <a class="ui-btn ui-state-disabled" name="usernameHeader"></a>
     </div>
     <div data-role="main" class="ui-content">
     <form id="locForm" action="#addloc-page" method="post">
@@ -888,8 +1048,9 @@ function getCurrentLocation(){
   
 <div data-role="page" id="itemlist-page" data-cache="false">
     <div data-role="header" data-theme="b">
-    <a href="#index1" data-role="button">Home</a>
-         <h1> Items</h1>
+        <a href="#index1" data-role="button">Home</a>
+        <h1> Items</h1>
+        <a class="ui-btn ui-state-disabled" name="usernameHeader"></a>
 
     </div>
     
@@ -905,7 +1066,7 @@ function getCurrentLocation(){
 
 <!--item detail page -->
 <div data-role="page" id="itemdetails-page">
-    <div data-role="header" data-theme="b"><a href="#itemlist-page" data-rel="back" data-role="button" onclick="resetForm();">Go back</a>
+    <div data-role="header" data-theme="b"><a href="#itemlist-page" data-rel="back" data-role="button" onclick="resetForm('#itemEditForm');">Go back</a>
         <h1>Edit Item</h1>
         <a data-role="button" onclick="deleteItem();">Delete</a>
     </div>
@@ -937,8 +1098,10 @@ function getCurrentLocation(){
   
 <!-- add item page -->
 <div data-role="page" id="additem-page">
-    <div data-role="header" data-theme="b"><a href="#itemlist-page" data-rel="back" data-role="button" onclick="resetForm1();">Go back</a>
-         <h1>Add Item</h1>
+    <div data-role="header" data-theme="b">
+        <a href="#itemlist-page" data-rel="back" data-role="button" onclick="resetForm('#itemForm');">Go back</a>
+        <h1>Add Item</h1>
+        <a class="ui-btn ui-state-disabled" name="usernameHeader"></a>
     </div>
     <div data-role="main" class="ui-content">
     <form id="itemForm" action="#additem-page" method="post">
@@ -957,7 +1120,7 @@ function getCurrentLocation(){
         </div>
         <br>
         <div>
-        <input type="submit" value="Add Location">
+        <input type="submit" value="Add Item">
         </div>
     </form>
     </div>
